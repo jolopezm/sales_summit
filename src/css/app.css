@@ -1,0 +1,168 @@
+@import url("modal.css");
+@import url("media.css");
+@import url("bottomNav.css");
+@import url("variables.css");
+
+* {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-synthesis: none;
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--bg-primary);
+  padding: 1rem;
+}
+button,
+a {
+  font: inherit;
+}
+
+button {
+  padding: 8px;
+  border-radius: 4px;
+  transition: none;
+  border-color: var(--gray-500);
+  border-width: 2px;
+  border-radius: var(--border-radius);
+  border-style: solid;
+}
+
+button:hover {
+  filter: brightness(0.9);
+}
+
+button:active {
+  filter: brightness(1);
+}
+
+.btn-primary {
+  border: none;
+  color: #fff;
+  background-color: var(--green-muted);
+}
+
+.btn-add-sale {
+  border-width: 0;
+  border-radius: 50%;
+  background-color: var(--green);
+  height: 48px;
+}
+
+article {
+  padding: 1rem;
+  background-color: var(--bg-card);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.summary-cards {
+  display: inline;
+  gap: 8px;
+}
+
+.summary-insight {
+  margin-bottom: 8px;
+}
+
+.summary-insight strong {
+  display: block;
+  font-size: small;
+}
+
+.summary-insight .number {
+  font-size: x-large;
+  font-weight: bold;
+  display: block;
+}
+
+.summary-insight span {
+  font-size: small;
+}
+
+.sales-remaining {
+  background-color: var(--bg-secondary);
+  color: #fff;
+}
+
+.sales-remaining .number {
+  color: var(--green);
+}
+
+.ipt-sale-amount {
+  padding: var(--padding-sm);
+  margin-top: var(--margin-sm);
+  margin-bottom: var(--margin-md);
+  width: 100%;
+  font-size: xx-large;
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 2px solid #000;
+}
+
+.ipt-sale-amount:focus {
+  outline: none;
+}
+
+.eyebrow {
+  font-size: smaller;
+  margin-bottom: 2px;
+}
+
+.greeting {
+  margin-top: 2px;
+}
+
+.sales-list {
+  display: block;
+  gap: 8px;
+}
+
+.ventas {
+  padding: 0;
+  margin: 0;
+}
+
+.ventas li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.monto {
+  font-weight: bold;
+  font-size: larger;
+}
+
+.sale-timestamp {
+  display: grid;
+  text-align: right;
+}
+
+.hora {
+  font-weight: 600;
+}
+
+.fecha {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.sales-info-cards {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.sales-info-cards article {
+  width: 100%;
+}
+
+.sales-info-cards article strong {
+  display: block;
+  font-size: x-large;
+}

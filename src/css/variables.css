@@ -1,0 +1,37 @@
+:root {
+  /* Backgrounds */
+  --bg-primary: #e9ecef;
+  --bg-secondary: #343a40;
+  --bg-card: #f8f9fa;
+  --bg-card-hover: #495057;
+
+  /* Borders */
+  --border-primary: #2a3743;
+  --border-secondary: #22303b;
+
+  /* Text */
+  --text-primary: #d8dee9;
+  --text-secondary: #9aa7b4;
+  --text-muted: #71808f;
+
+  /* Accent colors */
+  --green: #65d47e;
+  --green-muted: #4a9f5e;
+  --blue: #78aef8;
+  --purple: #c17adf;
+  --yellow: #e6c84f;
+  --red: #ef6b6b;
+  --gray-500: #71808f;
+
+  /* Layout */
+  --page-width: 1200px;
+  --page-padding: 60px;
+
+  /* UI */
+  --border-radius: 8px;
+  --transition: 180ms ease;
+
+  --padding-sm: 8px;
+  --margin-sm: 8px;
+  --margin-md: 16px;
+}

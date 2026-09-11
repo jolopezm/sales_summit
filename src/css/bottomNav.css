@@ -1,0 +1,23 @@
+.bottom-navigation {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  padding: 0.8rem;
+  background: var(--bg-card);
+  border-top: 1px solid #e3eaf1;
+  backdrop-filter: blur(8px);
+}
+.bottom-navigation a {
+  min-width: 86px;
+  color: #65738a;
+  text-align: center;
+  text-decoration: none;
+  font-size: 0.8rem;
+}
+.bottom-navigation .active {
+  color: var(--bg-secondary);
+  font-weight: 700;
+}

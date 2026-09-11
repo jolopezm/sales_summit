@@ -1,0 +1,14 @@
+@media (min-width: 561px) {
+  body {
+    background: #e9eef5;
+  }
+  .app-shell {
+    background: #f6f8fb;
+    box-shadow: 0 0 40px rgb(16 35 63 / 0.12);
+  }
+  .bottom-navigation {
+    left: 50%;
+    width: 560px;
+    transform: translateX(-50%);
+  }
+}

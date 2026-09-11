@@ -1,2 +1,4 @@
-instructions.md
-AGENTS.md
+node_modules
+dist
+.vite
+coverage
