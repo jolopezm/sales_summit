@@ -50,3 +50,23 @@ dialog label {
   border: 1px solid var(--border);
   border-radius: 12px;
 }
+.btn-danger {
+  min-height: 3rem;
+  border: 0;
+  border-radius: 12px;
+  background: var(--danger);
+  color: white;
+  font-weight: 750;
+}
+.delete-confirmation {
+  display: grid;
+  gap: 1rem;
+}
+.delete-confirmation button {
+  min-height: 3rem;
+  border-radius: 12px;
+}
+.delete-confirmation button:not(.btn-danger) {
+  border: 1px solid var(--border);
+  background: white;
+}

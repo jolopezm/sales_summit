@@ -29,4 +29,21 @@ describe('DexieSaleRepository', () => {
 
     await expect(repository.listForMonth('2026-09-01T00:00:00.000Z', '2026-10-01T00:00:00.000Z')).resolves.toMatchObject([{ id: 'september' }]);
   });
+
+  it('updates an existing sale', async () => {
+    const sale = { id: 'sale', amount: 10_000, soldAt: '2026-09-01T10:00:00.000Z', createdAt: '2026-09-01T10:00:00.000Z' };
+    await repository.add(sale);
+
+    await repository.update({ ...sale, amount: 15_000 });
+
+    await expect(repository.list()).resolves.toMatchObject([{ id: 'sale', amount: 15_000 }]);
+  });
+
+  it('deletes an existing sale', async () => {
+    await repository.add({ id: 'sale', amount: 10_000, soldAt: '2026-09-01T10:00:00.000Z', createdAt: '2026-09-01T10:00:00.000Z' });
+
+    await repository.delete('sale');
+
+    await expect(repository.list()).resolves.toEqual([]);
+  });
 });

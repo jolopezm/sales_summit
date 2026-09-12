@@ -194,12 +194,24 @@ article {
   border-radius: var(--border-radius);
 }
 .sales-list li {
+  border-bottom: 1px solid var(--border);
+}
+.sales-list li > button {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem 0;
-  border-bottom: 1px solid var(--border);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sales-list li > button:focus-visible {
+  outline: 3px solid var(--green);
+  outline-offset: 3px;
 }
 .sales-list li:last-child {
   border-bottom: 0;
@@ -217,7 +229,7 @@ article {
   font-size: 0.75rem;
   white-space: nowrap;
 }
-.sales-list li > span {
+.sales-list li > button > span:last-child {
   display: grid;
   color: var(--text-muted);
   font-size: 0.82rem;

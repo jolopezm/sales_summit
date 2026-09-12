@@ -10,6 +10,7 @@
   import { DexieSaleRepository } from "./repositories/dexie-sale-repository";
   import { DexieSellerProfileRepository } from "./repositories/dexie-seller-profile-repository";
   import { createSale } from "./services/create-sale";
+  import { updateSaleAmount } from "./services/update-sale";
 
   const emptyProfile: SellerProfile = {
     name: "",
@@ -58,6 +59,19 @@
     const sale = createSale(amount);
     await saleRepository.add(sale);
     sales = [sale, ...sales];
+  }
+
+  async function updateSale(sale: Sale, amount: number) {
+    const updatedSale = updateSaleAmount(sale, amount);
+    await saleRepository.update(updatedSale);
+    sales = sales.map((storedSale) =>
+      storedSale.id === updatedSale.id ? updatedSale : storedSale,
+    );
+  }
+
+  async function deleteSale(id: string) {
+    await saleRepository.delete(id);
+    sales = sales.filter((sale) => sale.id !== id);
   }
 
   async function saveProfile(updatedProfile: SellerProfile) {
@@ -127,7 +141,14 @@
     {#if activePage === "summary"}
       <SummaryPage {profile} {sales} {currency} {now} />
     {:else if activePage === "sales"}
-      <SalesPage {sales} {profile} {currency} {now} />
+      <SalesPage
+        {sales}
+        {profile}
+        {currency}
+        {now}
+        onUpdate={updateSale}
+        onDelete={deleteSale}
+      />
     {:else if activePage === "insights"}
       <InsightsPage {profile} {sales} {currency} {now} />
     {:else if activePage === "profile"}

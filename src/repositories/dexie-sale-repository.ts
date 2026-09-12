@@ -9,6 +9,14 @@ export class DexieSaleRepository implements SaleRepository {
     await this.database.sales.add(sale);
   }
 
+  async update(sale: Sale): Promise<void> {
+    await this.database.sales.put(sale);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.database.sales.delete(id);
+  }
+
   async list(): Promise<Sale[]> {
     return this.database.sales.orderBy('soldAt').reverse().toArray();
   }
