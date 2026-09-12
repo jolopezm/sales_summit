@@ -1,38 +1,37 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import BottomNavigation from "./components/BottomNavigation.svelte";
+  import SaleEntryDialog from "./components/SaleEntryDialog.svelte";
   import type { Sale, SellerProfile } from "./domain/models";
   import ProfilePage from "./routes/ProfilePage.svelte";
   import SalesPage from "./routes/SalesPage.svelte";
   import SummaryPage from "./routes/SummaryPage.svelte";
   import InsightsPage from "./routes/InsightsPage.svelte";
-  import NotFoundPage from "./routes/NotFoundPage.svelte";
+  import { DexieSaleRepository } from "./repositories/dexie-sale-repository";
+  import { DexieSellerProfileRepository } from "./repositories/dexie-seller-profile-repository";
+  import { createSale } from "./services/create-sale";
 
-  const profile: SellerProfile = {
-    name: "José",
-    commissionRate: 0.007,
-    monthlyGoal: 50_000,
+  const emptyProfile: SellerProfile = {
+    name: "",
+    commissionRate: 0,
+    monthlyCommissionGoal: 0,
     workSchedule: {
-      weekdays: [1, 2, 3, 4, 5],
-      startTime: "09:00",
-      endTime: "18:00",
+      weekdays: [],
+      startTime: "",
+      endTime: "",
+      breakHour: "",
     },
   };
 
-  const sales: Sale[] = [
-    {
-      id: "mock-1",
-      amount: 9_900,
-      soldAt: "2026-09-02T14:20:00.000Z",
-      createdAt: "2026-09-02T14:20:00.000Z",
-    },
-    {
-      id: "mock-2",
-      amount: 13_590,
-      soldAt: "2026-09-05T11:00:00.000Z",
-      createdAt: "2026-09-05T11:00:00.000Z",
-    },
-  ];
+  const saleRepository = new DexieSaleRepository();
+  const profileRepository = new DexieSellerProfileRepository();
+
+  let profile = $state<SellerProfile | null>(null);
+  let sales = $state<Sale[]>([]);
+  let loading = $state(true);
+  let loadError = $state("");
+  let saleDialogOpen = $state(false);
+  let now = $state(new Date());
 
   const currency = new Intl.NumberFormat("es-CL", {
     style: "currency",
@@ -55,6 +54,27 @@
     activePage = page;
   }
 
+  async function addSale(amount: number) {
+    const sale = createSale(amount);
+    await saleRepository.add(sale);
+    sales = [sale, ...sales];
+  }
+
+  async function saveProfile(updatedProfile: SellerProfile) {
+    await profileRepository.save(updatedProfile);
+    profile = updatedProfile;
+  }
+
+  async function completeOnboarding(updatedProfile: SellerProfile) {
+    await saveProfile(updatedProfile);
+    activePage = "summary";
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${window.location.search}`,
+    );
+  }
+
   onMount(() => {
     const syncPageFromHash = () => {
       activePage = pageFromHash(window.location.hash);
@@ -62,8 +82,24 @@
 
     syncPageFromHash();
     window.addEventListener("hashchange", syncPageFromHash);
+    const clock = window.setInterval(() => (now = new Date()), 60_000);
 
-    return () => window.removeEventListener("hashchange", syncPageFromHash);
+    Promise.all([saleRepository.list(), profileRepository.get()])
+      .then(([storedSales, storedProfile]) => {
+        sales = storedSales;
+        if (storedProfile) profile = storedProfile;
+      })
+      .catch(() => {
+        loadError = "No pudimos abrir tus datos locales.";
+      })
+      .finally(() => {
+        loading = false;
+      });
+
+    return () => {
+      window.removeEventListener("hashchange", syncPageFromHash);
+      window.clearInterval(clock);
+    };
   });
 </script>
 
@@ -72,17 +108,41 @@
 </svelte:head>
 
 <main class="app-shell">
-  {#if activePage === "summary"}
-    <SummaryPage {profile} {sales} {currency} />
-  {:else if activePage === "sales"}
-    <SalesPage {sales} {currency} />
-  {:else if activePage === "insights"}
-    <InsightsPage></InsightsPage>
-  {:else if activePage === "profile"}
-    <ProfilePage {profile} {currency} />
+  {#if loading}
+    <section class="status-page" aria-live="polite">
+      <p>Cargando tus datos…</p>
+    </section>
+  {:else if loadError}
+    <section class="status-page" role="alert">
+      <h1>No pudimos iniciar la aplicación</h1>
+      <p>{loadError}</p>
+    </section>
+  {:else if profile === null}
+    <ProfilePage
+      profile={emptyProfile}
+      onSave={completeOnboarding}
+      onboarding
+    />
   {:else}
-    <NotFoundPage></NotFoundPage>
-  {/if}
+    {#if activePage === "summary"}
+      <SummaryPage {profile} {sales} {currency} {now} />
+    {:else if activePage === "sales"}
+      <SalesPage {sales} {profile} {currency} {now} />
+    {:else if activePage === "insights"}
+      <InsightsPage {profile} {sales} {currency} {now} />
+    {:else if activePage === "profile"}
+      <ProfilePage {profile} onSave={saveProfile} />
+    {/if}
 
-  <BottomNavigation {activePage} onSelect={selectPage} />
+    <BottomNavigation
+      {activePage}
+      onSelect={selectPage}
+      onAddSale={() => (saleDialogOpen = true)}
+    />
+    <SaleEntryDialog
+      open={saleDialogOpen}
+      onClose={() => (saleDialogOpen = false)}
+      onSave={addSale}
+    />
+  {/if}
 </main>

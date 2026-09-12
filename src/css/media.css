@@ -1,14 +1,15 @@
-@media (min-width: 561px) {
-  body {
-    background: #e9eef5;
-  }
-  .app-shell {
-    background: #f6f8fb;
-    box-shadow: 0 0 40px rgb(16 35 63 / 0.12);
-  }
-  .bottom-navigation {
-    left: 50%;
-    width: 560px;
-    transform: translateX(-50%);
-  }
+@media (min-width: 640px) {
+  body { background: #e8edf2; }
+  .app-shell { max-width: 640px; margin-inline: auto; padding: 2rem 2rem 7rem; background: var(--bg-primary); box-shadow: 0 0 50px rgb(16 35 63 / 0.12); }
+  .bottom-navigation { right: auto; left: 50%; width: 640px; transform: translateX(-50%); }
+  .insights-header { grid-template-columns: 1fr auto; align-items: end; }
+  .period-field { min-width: 11rem; }
+}
+
+@media (max-width: 370px) {
+  .app-shell { padding-inline: 0.75rem; }
+  .summary-grid, .metrics-grid { grid-template-columns: 1fr; }
+  .metrics-grid article:first-child:nth-last-child(3) { grid-column: auto; }
+  .goal-card { grid-template-columns: 1fr 6rem; }
+  .progress-ring { width: 5.75rem; height: 5.75rem; }
 }

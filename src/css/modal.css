@@ -1,11 +1,52 @@
 dialog {
-  border: none;
-  border-radius: 12px;
-  padding: 24px;
-  max-width: 500px;
-  width: 90%;
+  width: min(92%, 28rem);
+  padding: 1.25rem;
+  border: 0;
+  border-radius: 20px;
+  color: var(--text);
+  box-shadow: 0 24px 70px rgb(8 20 38 / 0.3);
 }
-
 dialog::backdrop {
-  background: rgb(0 0 0 / 0.5);
+  background: rgb(8 20 38 / 0.62);
+  backdrop-filter: blur(2px);
+}
+dialog form {
+  display: grid;
+  gap: 1rem;
+}
+dialog h2 {
+  margin: 0;
+}
+dialog label {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+.money-input {
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid var(--navy);
+}
+.money-input span {
+  font-size: 1.8rem;
+}
+.money-input input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 0;
+  outline: 0;
+  color: var(--text);
+  font-size: 2rem;
+  font-weight: 800;
+}
+.dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.dialog-actions button {
+  min-height: 3rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
 }

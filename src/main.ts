@@ -1,6 +1,5 @@
 import { mount } from "svelte";
 import App from "./App.svelte";
-// @ts-expect-error CSS files are handled by the bundler.
 import "./css/app.css";
 
 const target = document.getElementById("app");

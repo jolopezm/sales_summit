@@ -13,39 +13,33 @@
   interface Props {
     activePage: Page;
     onSelect: (page: Page) => void;
+    onAddSale: () => void;
   }
 
-  let { activePage, onSelect }: Props = $props();
-  let dialog = $state<HTMLDialogElement | undefined>(undefined);
-
-  function openModal() {
-    dialog?.showModal();
-  }
-
-  function closeModal() {
-    dialog?.close();
-  }
+  let { activePage, onSelect, onAddSale }: Props = $props();
 </script>
 
-<nav class="bottom-navigation" aria-label="Primary navigation">
+<nav class="bottom-navigation" aria-label="Navegación principal">
   <a
     class:active={activePage === "summary"}
     href="#summary"
     onclick={() => onSelect("summary")}
+    aria-current={activePage === "summary" ? "page" : undefined}
   >
     <Fa icon={faHouse} size="2x"></Fa>
-    <p>Home</p>
+    <span>Inicio</span>
   </a>
   <a
     class:active={activePage === "sales"}
     href="#sales"
     onclick={() => onSelect("sales")}
+    aria-current={activePage === "sales" ? "page" : undefined}
   >
     <Fa icon={faList} size="2x"></Fa>
-    <p>Ventas</p>
+    <span>Ventas</span>
   </a>
 
-  <button class="btn-add-sale" onclick={openModal}>
+  <button class="btn-add-sale" onclick={onAddSale} aria-label="Registrar una venta">
     <Fa icon={faPlus} size="2x"></Fa>
   </button>
 
@@ -53,31 +47,19 @@
     class:active={activePage === "insights"}
     href="#insights"
     onclick={() => onSelect("insights")}
+    aria-current={activePage === "insights" ? "page" : undefined}
   >
     <Fa icon={faChartSimple} size="2x"></Fa>
-    <p>Insights</p>
+    <span>Insights</span>
   </a>
 
   <a
     class:active={activePage === "profile"}
     href="#profile"
     onclick={() => onSelect("profile")}
+    aria-current={activePage === "profile" ? "page" : undefined}
   >
     <Fa icon={faUser} size="2x"></Fa>
-    <p>Perfil</p>
+    <span>Perfil</span>
   </a>
 </nav>
-
-<dialog bind:this={dialog}>
-  <h2>Nueva venta</h2>
-
-  <form action="/add-sale-endpoint" method="post">
-    <div>
-      <label for="sale-amount"> Ingresa el monto de la venta </label>
-      <input type="number" class="ipt-sale-amount" placeholder="0" />
-    </div>
-  </form>
-
-  <button onclick={closeModal}> Cerrar </button>
-  <button class="btn-primary">Guardar</button>
-</dialog>

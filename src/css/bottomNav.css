@@ -1,23 +1,49 @@
 .bottom-navigation {
   position: fixed;
+  z-index: 10;
   right: 0;
   bottom: 0;
   left: 0;
-  display: flex;
-  justify-content: center;
-  padding: 0.8rem;
-  background: var(--bg-card);
-  border-top: 1px solid #e3eaf1;
-  backdrop-filter: blur(8px);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr) 3.5rem repeat(2, 1fr);
+  align-items: center;
+  padding: 0.65rem max(0.5rem, env(safe-area-inset-right))
+    calc(0.65rem + env(safe-area-inset-bottom))
+    max(0.5rem, env(safe-area-inset-left));
+  background: rgb(255 255 255 / 0.96);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(12px);
 }
 .bottom-navigation a {
-  min-width: 86px;
-  color: #65738a;
-  text-align: center;
+  display: grid;
+  min-width: 0;
+  justify-items: center;
+  gap: 0.2rem;
+  color: var(--text-muted);
+  font-size: 0.68rem;
   text-decoration: none;
-  font-size: 0.8rem;
 }
-.bottom-navigation .active {
-  color: var(--bg-secondary);
-  font-weight: 700;
+.bottom-navigation a svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+.bottom-navigation a.active {
+  color: var(--green-dark);
+  font-weight: 800;
+}
+.btn-add-sale {
+  display: grid;
+  width: 3.25rem;
+  height: 3.25rem;
+  place-items: center;
+  justify-self: center;
+  border: 4px solid white;
+  border-radius: 50%;
+  background: var(--green-light);
+  color: var(--navy);
+  box-shadow: 0 5px 15px rgb(24 122 72 / 0.3);
+  transform: translateY(-0.65rem);
+}
+.btn-add-sale svg {
+  width: 1.2rem;
 }

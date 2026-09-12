@@ -1,5 +1,5 @@
 import type { Sale, WorkSchedule } from './models';
-import { totalSales } from './sale-calculations';
+import { accumulatedCommission, totalSales } from './sale-calculations';
 
 export const SUFFICIENT_DATA_MIN_SALES = 5;
 export const SUFFICIENT_DATA_MIN_DAYS = 3;
@@ -34,8 +34,12 @@ function toDate(value: string | Date): Date {
   return date;
 }
 
-function toIsoDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
+function toLocalIsoDate(date: Date): string {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0')
+  ].join('-');
 }
 
 function minutesFromTime(value: string): number {
@@ -44,23 +48,30 @@ function minutesFromTime(value: string): number {
   return hours * 60 + minutes;
 }
 
-function scheduleMinutes(schedule: WorkSchedule): { start: number; end: number; duration: number } {
-  if (
-    schedule.weekdays.length === 0 ||
-    new Set(schedule.weekdays).size !== schedule.weekdays.length ||
-    schedule.weekdays.some((weekday) => !Number.isInteger(weekday) || weekday < 0 || weekday > 6)
-  ) {
-    throw new RangeError('Work schedule weekdays must be unique integers from 0 to 6');
+export function isValidWorkSchedule(schedule: WorkSchedule): boolean {
+  try {
+    const start = minutesFromTime(schedule.startTime);
+    const end = minutesFromTime(schedule.endTime);
+    return (
+      schedule.weekdays.length > 0 &&
+      new Set(schedule.weekdays).size === schedule.weekdays.length &&
+      schedule.weekdays.every((weekday) => Number.isInteger(weekday) && weekday >= 0 && weekday <= 6) &&
+      end > start
+    );
+  } catch {
+    return false;
   }
+}
 
+function scheduleMinutes(schedule: WorkSchedule): { start: number; end: number; duration: number } {
+  if (!isValidWorkSchedule(schedule)) throw new RangeError('Invalid work schedule');
   const start = minutesFromTime(schedule.startTime);
   const end = minutesFromTime(schedule.endTime);
-  if (end <= start) throw new RangeError('Work schedule endTime must be after startTime');
   return { start, end, duration: end - start };
 }
 
 function monthStart(date: Date, offset = 0): Date {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + offset, 1));
+  return new Date(date.getFullYear(), date.getMonth() + offset, 1);
 }
 
 function summarize(sales: readonly Sale[]): PeriodSummary {
@@ -86,14 +97,14 @@ function workingMinutesInMonth(schedule: WorkSchedule, now: Date): { elapsed: nu
   let elapsed = 0;
   let total = 0;
 
-  for (const day = new Date(firstDay); day < nextMonth; day.setUTCDate(day.getUTCDate() + 1)) {
-    if (!schedule.weekdays.includes(day.getUTCDay())) continue;
+  for (const day = new Date(firstDay); day < nextMonth; day.setDate(day.getDate() + 1)) {
+    if (!schedule.weekdays.includes(day.getDay())) continue;
     total += duration;
 
     const dayStart = new Date(day);
-    dayStart.setUTCMinutes(start);
+    dayStart.setHours(0, start, 0, 0);
     const dayEnd = new Date(day);
-    dayEnd.setUTCMinutes(end);
+    dayEnd.setHours(0, end, 0, 0);
     if (now >= dayEnd) elapsed += duration;
     else if (now > dayStart) elapsed += (now.getTime() - dayStart.getTime()) / 60_000;
   }
@@ -132,7 +143,7 @@ export function percentageVariation(current: number, baseline: number): number |
 export function salesByDay(sales: readonly Sale[]): DaySales[] {
   const groups = new Map<string, Sale[]>();
   for (const sale of sales) {
-    const date = toIsoDate(toDate(sale.soldAt));
+    const date = toLocalIsoDate(toDate(sale.soldAt));
     groups.set(date, [...(groups.get(date) ?? []), sale]);
   }
   return [...groups.entries()]
@@ -147,56 +158,67 @@ export function bestSalesDay(sales: readonly Sale[]): DaySales | null {
   );
 }
 
-export function monthlyProjection(
+export function monthlyCommissionProjection(
   sales: readonly Sale[],
+  commissionRate: number,
   schedule: WorkSchedule,
   now: Date = new Date()
 ): number {
   const { elapsed, total } = workingMinutesInMonth(schedule, now);
   if (elapsed === 0) return 0;
-  return Math.round((totalSales(currentMonthSales(sales, now)) / elapsed) * total);
+  const projectedGrossSales = (totalSales(currentMonthSales(sales, now)) / elapsed) * total;
+  return Math.round(projectedGrossSales * commissionRate);
 }
 
-export function averagePerWorkedDay(
+export function averageCommissionPerWorkedDay(
   sales: readonly Sale[],
+  commissionRate: number,
   schedule: WorkSchedule,
   now: Date = new Date()
 ): number {
   const { elapsed } = workingMinutesInMonth(schedule, now);
   const duration = scheduleMinutes(schedule).duration;
   if (elapsed === 0) return 0;
-  return Math.round(totalSales(currentMonthSales(sales, now)) / (elapsed / duration));
+  const grossSalesPerDay = totalSales(currentMonthSales(sales, now)) / (elapsed / duration);
+  return Math.round(grossSalesPerDay * commissionRate);
 }
 
-export function amountNeededPerRemainingWorkday(
+export function commissionNeededPerRemainingWorkday(
   sales: readonly Sale[],
-  monthlySalesGoal: number,
+  commissionRate: number,
+  monthlyCommissionGoal: number,
   schedule: WorkSchedule,
   now: Date = new Date()
 ): number {
   const { elapsed, total } = workingMinutesInMonth(schedule, now);
   const remainingDays = (total - elapsed) / scheduleMinutes(schedule).duration;
-  if (remainingDays <= 0) return Math.max(0, monthlySalesGoal - totalSales(currentMonthSales(sales, now)));
-  return Math.ceil(Math.max(0, monthlySalesGoal - totalSales(currentMonthSales(sales, now))) / remainingDays);
+  const remaining = Math.max(
+    0,
+    monthlyCommissionGoal - accumulatedCommission(currentMonthSales(sales, now), commissionRate)
+  );
+  if (remainingDays <= 0) return remaining;
+  return Math.ceil(remaining / remainingDays);
 }
 
-export function pacePercentage(
+export function commissionPacePercentage(
   sales: readonly Sale[],
-  monthlySalesGoal: number,
+  commissionRate: number,
+  monthlyCommissionGoal: number,
   schedule: WorkSchedule,
   now: Date = new Date()
 ): number {
-  if (monthlySalesGoal <= 0) return 0;
+  if (monthlyCommissionGoal <= 0) return 0;
   const { elapsed, total } = workingMinutesInMonth(schedule, now);
   if (elapsed === 0 || total === 0) return 0;
-  const expectedAmount = monthlySalesGoal * (elapsed / total);
-  return Math.round((totalSales(currentMonthSales(sales, now)) / expectedAmount) * 100);
+  const expectedCommission = monthlyCommissionGoal * (elapsed / total);
+  const commission = accumulatedCommission(currentMonthSales(sales, now), commissionRate);
+  return Math.round((commission / expectedCommission) * 100);
 }
 
 export function bestWeekday(sales: readonly Sale[]): WeekdaySales | null {
   const groups = new Map<number, Sale[]>();
   for (const sale of sales) {
-    const weekday = toDate(sale.soldAt).getUTCDay();
+    const weekday = toDate(sale.soldAt).getDay();
     groups.set(weekday, [...(groups.get(weekday) ?? []), sale]);
   }
   return [...groups.entries()].reduce<WeekdaySales | null>((best, [weekday, weekdaySales]) => {
@@ -211,7 +233,7 @@ export function bestTimeSlot(sales: readonly Sale[], slotHours = 3): TimeSlotSal
   }
   const groups = new Map<number, Sale[]>();
   for (const sale of sales) {
-    const hour = toDate(sale.soldAt).getUTCHours();
+    const hour = toDate(sale.soldAt).getHours();
     const startHour = Math.floor(hour / slotHours) * slotHours;
     groups.set(startHour, [...(groups.get(startHour) ?? []), sale]);
   }
