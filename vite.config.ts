@@ -2,7 +2,10 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vite';
 
+const base = process.env.VITE_BASE_PATH ?? '/';
+
 export default defineConfig({
+  base,
   plugins: [
     svelte(),
     VitePWA({
@@ -14,7 +17,8 @@ export default defineConfig({
         theme_color: '#10233f',
         background_color: '#f6f8fb',
         display: 'standalone',
-        start_url: '/',
+        start_url: base,
+        scope: base,
         icons: [
           {
             src: 'icon.svg',
