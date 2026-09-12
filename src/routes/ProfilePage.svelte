@@ -21,7 +21,7 @@
 
   let { profile, onSave, onboarding = false }: Props = $props();
   let name = $state("");
-  let monthlyCommissionGoal = $state(0);
+  let monthlyCommissionGoalText = $state("");
   let commissionPercent = $state(0);
   let weekdays = $state<number[]>([]);
   let startTime = $state("");
@@ -31,11 +31,14 @@
   let message = $state("");
   let error = $state("");
   let initialized = false;
+  const amountFormatter = new Intl.NumberFormat("es-CL");
 
   $effect(() => {
     if (initialized) return;
     name = profile.name;
-    monthlyCommissionGoal = profile.monthlyCommissionGoal;
+    monthlyCommissionGoalText = profile.monthlyCommissionGoal
+      ? amountFormatter.format(profile.monthlyCommissionGoal)
+      : "";
     commissionPercent = profile.commissionRate * 100;
     weekdays = [...profile.workSchedule.weekdays];
     startTime = profile.workSchedule.startTime;
@@ -50,10 +53,22 @@
       : [...weekdays, day].sort();
   }
 
+  function updateMonthlyCommissionGoal(event: Event) {
+    const input = event.currentTarget as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, "");
+
+    monthlyCommissionGoalText = digits
+      ? amountFormatter.format(Number(digits))
+      : "";
+  }
+
   async function submit(event: SubmitEvent) {
     event.preventDefault();
     error = "";
     message = "";
+    const monthlyCommissionGoal = Number(
+      monthlyCommissionGoalText.replace(/\D/g, ""),
+    );
     const schedule = { weekdays, startTime, endTime, breakHour };
     if (!name.trim()) error = "Ingresa tu nombre.";
     else if (
@@ -117,10 +132,11 @@
         <input
           id="monthly-goal"
           name="monthlyGoal"
-          type="number"
-          min="1"
-          step="1"
-          bind:value={monthlyCommissionGoal}
+          type="text"
+          inputmode="numeric"
+          value={monthlyCommissionGoalText}
+          oninput={updateMonthlyCommissionGoal}
+          placeholder="0"
           required
         />
       </div>

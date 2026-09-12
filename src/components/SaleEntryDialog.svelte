@@ -8,7 +8,7 @@
   let { open, onClose, onSave }: Props = $props();
   let dialog = $state<HTMLDialogElement>();
   let amountInput = $state<HTMLInputElement>();
-  let amount = $state<number | undefined>();
+  let amountText = $state("");
   let error = $state("");
   let saving = $state(false);
 
@@ -23,6 +23,9 @@
   async function submit(event: SubmitEvent) {
     event.preventDefault();
     error = "";
+
+    const amount = Number(amountText.replace(/\D/g, ""));
+
     if (!amount || !Number.isSafeInteger(amount) || amount <= 0) {
       error = "Ingresa un monto válido, sin decimales.";
       return;
@@ -31,13 +34,22 @@
     saving = true;
     try {
       await onSave(amount);
-      amount = undefined;
+      amountText = "";
       onClose();
     } catch {
       error = "No pudimos guardar la venta. Intenta nuevamente.";
     } finally {
       saving = false;
     }
+  }
+
+  const amountFormatter = new Intl.NumberFormat("es-CL");
+
+  function updateAmount(event: Event) {
+    const input = event.currentTarget as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, "");
+
+    amountText = digits ? amountFormatter.format(Number(digits)) : "";
   }
 </script>
 
@@ -53,15 +65,11 @@
     <div class="money-input">
       <span aria-hidden="true">$</span>
       <input
-        id="sale-amount"
-        name="amount"
-        type="number"
-        min="1"
-        step="1"
+        type="text"
         inputmode="numeric"
+        value={amountText}
+        oninput={updateAmount}
         placeholder="0"
-        bind:this={amountInput}
-        bind:value={amount}
         required
       />
     </div>

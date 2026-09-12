@@ -28,7 +28,7 @@
   height: 1.2rem;
 }
 .bottom-navigation a.active {
-  color: var(--green-dark);
+  color: var(--green);
   font-weight: 800;
 }
 .btn-add-sale {

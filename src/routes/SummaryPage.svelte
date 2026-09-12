@@ -67,7 +67,7 @@
     year: "numeric",
   });
   const progressFormatter = new Intl.NumberFormat("es-CL", {
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 1,
   });
   const monthLabel = $derived(monthFormatter.format(now));
   const progressLabel = $derived(

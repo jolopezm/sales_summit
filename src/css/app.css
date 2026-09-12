@@ -119,7 +119,7 @@ article {
   border-radius: 50%;
   background:
     radial-gradient(circle closest-side, white 74%, transparent 75% 99%),
-    conic-gradient(var(--green) calc(var(--progress) * 1%), #dfe9e4 0);
+    conic-gradient(var(--green-light) calc(var(--progress) * 1%), #dfe9e4 0);
 }
 .progress-ring span {
   font-size: 1.35rem;
@@ -167,7 +167,7 @@ article {
 
 .btn-primary {
   border: 0;
-  background: var(--green-dark);
+  background: var(--navy);
   color: white;
   font-weight: 750;
 }
