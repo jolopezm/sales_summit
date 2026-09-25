@@ -185,13 +185,65 @@ article {
   color: var(--text-muted);
 }
 
+.sales-by-day {
+  display: grid;
+  gap: 1.25rem;
+}
+.sales-day {
+  display: grid;
+  padding: 0;
+}
+.sales-day-header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.65rem 0.8rem;
+  background: var(--navy-soft);
+  border-radius: calc(var(--border-radius) - 1px)
+    calc(var(--border-radius) - 1px) 0 0;
+  color: white;
+  box-shadow: 0 8px 18px rgb(16 26 45 / 0.18);
+}
+.sales-day-header h2 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.sales-day-header dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  text-align: right;
+}
+.sales-day-header dl div {
+  min-width: 0;
+}
+.sales-day-header dt {
+  color: #b9c5d8;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.sales-day-header dd {
+  margin: 0.1rem 0 0;
+  overflow-wrap: anywhere;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.sales-day-header dl div:last-child dd {
+  color: var(--green-light);
+}
 .sales-list {
   margin: 0;
   padding: 0 1rem;
   list-style: none;
   background: white;
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius);
+  border-radius: 0 0 calc(var(--border-radius) - 1px)
+    calc(var(--border-radius) - 1px);
 }
 .sales-list li {
   border-bottom: 1px solid var(--border);
@@ -229,11 +281,9 @@ article {
   font-size: 0.75rem;
   white-space: nowrap;
 }
-.sales-list li > button > span:last-child {
-  display: grid;
+.sale-time {
   color: var(--text-muted);
   font-size: 0.82rem;
-  text-align: right;
 }
 
 .profile-form {

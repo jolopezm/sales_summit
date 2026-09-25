@@ -9,6 +9,7 @@ import {
   commissionPacePercentage,
   currentAndPreviousPeriodSummary,
   filterSalesByRange,
+  groupSalesByDay,
   hasSufficientData,
   isValidWorkSchedule,
   monthlyCommissionProjection,
@@ -65,6 +66,18 @@ describe('period insights', () => {
 
 describe('distribution insights', () => {
   const completedSales = sales.filter(({ id }) => id !== 'aug' && id !== 'future');
+
+  it('groups individual sales by local calendar day', () => {
+    expect(groupSalesByDay(completedSales).map(({ date, sales: groupedSales }) => ({
+      date,
+      saleIds: groupedSales.map(({ id }) => id)
+    }))).toEqual([
+      { date: '2026-09-01', saleIds: ['1', '2'] },
+      { date: '2026-09-02', saleIds: ['3'] },
+      { date: '2026-09-08', saleIds: ['4'] },
+      { date: '2026-09-09', saleIds: ['5'] }
+    ]);
+  });
 
   it('groups sales by local calendar day and identifies the best day', () => {
     expect(salesByDay(completedSales)[0]).toEqual({
