@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import BottomNavigation from "./components/BottomNavigation.svelte";
   import SaleEntryDialog from "./components/SaleEntryDialog.svelte";
+  import Toast from "./components/Toast.svelte";
   import type { Sale, SellerProfile } from "./domain/models";
   import ProfilePage from "./routes/ProfilePage.svelte";
   import SalesPage from "./routes/SalesPage.svelte";
@@ -44,6 +45,19 @@
 
   let activePage: Page = $state("summary");
 
+  type toastType = "success" | "fail" | "info";
+  interface ToastState {
+    message: string;
+    type: toastType;
+    duration: number;
+  }
+
+  let toast = $state<ToastState | null>(null);
+
+  function showToast(message: string, type: toastType, duration = 3000) {
+    toast = { message, type, duration };
+  }
+
   function pageFromHash(hash: string): Page {
     if (hash === "#sales") return "sales";
     if (hash === "#profile") return "profile";
@@ -56,17 +70,30 @@
   }
 
   async function addSale(amount: number) {
-    const sale = createSale(amount);
-    await saleRepository.add(sale);
-    sales = [sale, ...sales];
+    try {
+      const sale = createSale(amount);
+      await saleRepository.add(sale);
+      sales = [sale, ...sales];
+      showToast("Venta guardada con exito.", "success");
+    } catch (error) {
+      showToast("No se pudo guardar la venta.", "fail");
+      throw error;
+    }
   }
 
   async function updateSale(sale: Sale, amount: number) {
-    const updatedSale = updateSaleAmount(sale, amount);
-    await saleRepository.update(updatedSale);
-    sales = sales.map((storedSale) =>
-      storedSale.id === updatedSale.id ? updatedSale : storedSale,
-    );
+    try {
+      const updatedSale = updateSaleAmount(sale, amount);
+      await saleRepository.update(updatedSale);
+      sales = sales.map((storedSale) =>
+        storedSale.id === updatedSale.id ? updatedSale : storedSale,
+      );
+
+      showToast("Venta editada con exito.", "success");
+    } catch (error) {
+      showToast("No se pudo editar la venta, intente mas tarde.", "fail");
+      throw error;
+    }
   }
 
   async function deleteSale(id: string) {
@@ -75,8 +102,15 @@
   }
 
   async function saveProfile(updatedProfile: SellerProfile) {
-    await profileRepository.save(updatedProfile);
-    profile = updatedProfile;
+    try {
+      await profileRepository.save(updatedProfile);
+      profile = updatedProfile;
+
+      showToast("Configuraciones guardadas.", "success");
+    } catch (error) {
+      showToast("No se pudo guardar los cambios.", "fail");
+      throw error;
+    }
   }
 
   async function completeOnboarding(updatedProfile: SellerProfile) {
@@ -122,6 +156,15 @@
 </svelte:head>
 
 <main class="app-shell">
+  {#if toast}
+    <Toast
+      message={toast.message}
+      type={toast.type}
+      duration={toast.duration}
+      onClose={() => (toast = null)}
+    ></Toast>
+  {/if}
+
   {#if loading}
     <section class="status-page" aria-live="polite">
       <p>Cargando tus datos…</p>
