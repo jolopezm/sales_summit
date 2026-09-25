@@ -467,3 +467,53 @@ fieldset {
   white-space: nowrap;
   border: 0;
 }
+
+.toast {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+
+  min-height: 3.25rem;
+
+  display: flex;
+  align-items: center;
+
+  background: var(--navy-soft);
+  color: white;
+  z-index: 1000;
+
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+
+  padding-left: 1rem;
+  padding-right: 1rem;
+  overflow: hidden;
+}
+
+.toast > * {
+  position: relative;
+  z-index: 1;
+}
+
+.toast-success {
+  background: var(--green);
+}
+
+.toast-fail {
+  background: var(--danger);
+}
+
+.toast-info {
+  background: var(--navy-soft);
+}
+
+.toast button {
+  margin-left: auto;
+  background-color: rgb(255, 255, 255, 0.2);
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  border: none;
+  font-size: 22px;
+}

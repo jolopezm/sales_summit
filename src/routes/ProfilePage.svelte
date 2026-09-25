@@ -28,7 +28,6 @@
   let endTime = $state("");
   let breakHour = $state("");
   let saving = $state(false);
-  let message = $state("");
   let error = $state("");
   let initialized = false;
   const amountFormatter = new Intl.NumberFormat("es-CL");
@@ -65,7 +64,6 @@
   async function submit(event: SubmitEvent) {
     event.preventDefault();
     error = "";
-    message = "";
     const monthlyCommissionGoal = Number(
       monthlyCommissionGoalText.replace(/\D/g, ""),
     );
@@ -92,7 +90,6 @@
         commissionRate: commissionPercent / 100,
         workSchedule: schedule,
       });
-      if (!onboarding) message = "Perfil actualizado.";
     } catch {
       error = "No pudimos guardar los cambios.";
     } finally {
@@ -212,7 +209,6 @@
     </article>
 
     {#if error}<p class="form-error" role="alert">{error}</p>{/if}
-    {#if message}<p class="form-success" role="status">{message}</p>{/if}
     <button class="btn-primary save-profile" type="submit" disabled={saving}>
       {saving ? "Guardando…" : onboarding ? "Comenzar" : "Guardar cambios"}
     </button>

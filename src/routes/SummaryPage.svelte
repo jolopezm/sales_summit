@@ -10,6 +10,7 @@
   } from "../domain/sale-calculations";
   import { filterSalesByRange } from "../domain/insight-calculations";
   import type { Sale, SellerProfile } from "../domain/models";
+  import { faListAlt } from "@fortawesome/free-solid-svg-icons";
 
   interface Props {
     profile: SellerProfile;
