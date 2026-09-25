@@ -5,7 +5,10 @@
     accumulatedCommission,
     totalSales,
   } from "../domain/sale-calculations";
-  import { filterSalesByRange } from "../domain/insight-calculations";
+  import {
+    filterSalesByRange,
+    groupSalesByDay,
+  } from "../domain/insight-calculations";
   interface Props {
     sales: Sale[];
     profile: SellerProfile;
@@ -31,6 +34,22 @@
   const dateFormatter = new Intl.DateTimeFormat("es-CL", {
     dateStyle: "short",
   });
+  const groupedSales = $derived(
+    groupSalesByDay(monthSales)
+      .reverse()
+      .map((group) => ({
+        ...group,
+        total: totalSales(group.sales),
+        commission: accumulatedCommission(
+          group.sales,
+          profile.commissionRate,
+        ),
+      })),
+  );
+  function formatDate(date: string) {
+    const [year, month, day] = date.split("-").map(Number);
+    return dateFormatter.format(new Date(year, month - 1, day));
+  }
 </script>
 
 <section class="page-content" aria-labelledby="sales-title">
@@ -55,40 +74,56 @@
       <p>Usa el botón central para registrar la primera.</p>
     </article>
   {:else}
-    <ol class="sales-list">
-      {#each monthSales as sale (sale.id)}
-        <li>
-          <button
-            type="button"
-            onclick={() => (selectedSale = sale)}
-            aria-label={`Editar venta de ${currency.format(sale.amount)}`}
-          >
-            <span class="sale-value">
-              <strong>{currency.format(sale.amount)}</strong>
-              <small
-                >| {currency.format(
-                  accumulatedCommission([sale], profile.commissionRate),
-                )}</small
-              >
-            </span>
-            <span>
-              <time datetime={sale.soldAt}
-                >{timeFormatter.format(new Date(sale.soldAt))}</time
-              >
-              <time datetime={sale.soldAt}
-                >{dateFormatter.format(new Date(sale.soldAt))}</time
-              >
-            </span>
-          </button>
-        </li>
+    <div class="sales-by-day">
+      {#each groupedSales as group (group.date)}
+        <article class="sales-day">
+          <header class="sales-day-header">
+            <h2>
+              <time datetime={group.date}>{formatDate(group.date)}</time>
+            </h2>
+            <dl>
+              <div>
+                <dt>Vendido</dt>
+                <dd>{currency.format(group.total)}</dd>
+              </div>
+              <div>
+                <dt>Comisión</dt>
+                <dd>{currency.format(group.commission)}</dd>
+              </div>
+            </dl>
+          </header>
+          <ol class="sales-list">
+            {#each group.sales as sale (sale.id)}
+              <li>
+                <button
+                  type="button"
+                  onclick={() => (selectedSale = sale)}
+                  aria-label={`Editar venta de ${currency.format(sale.amount)}`}
+                >
+                  <span class="sale-value">
+                    <strong>{currency.format(sale.amount)}</strong>
+                    <small
+                      >| {currency.format(
+                        accumulatedCommission([sale], profile.commissionRate),
+                      )}</small
+                    >
+                  </span>
+                  <time class="sale-time" datetime={sale.soldAt}
+                    >{timeFormatter.format(new Date(sale.soldAt))}</time
+                  >
+                </button>
+              </li>
+            {/each}
+          </ol>
+        </article>
       {/each}
-    </ol>
+    </div>
   {/if}
 
   <SaleEditDialog
     sale={selectedSale}
     onClose={() => (selectedSale = null)}
     onSave={onUpdate}
-    onDelete={onDelete}
+    {onDelete}
   />
 </section>
