@@ -5,6 +5,7 @@ export interface SellerProfileRecord {
   key: string;
   name: string;
   commissionRate: number;
+  commissionRateRetail?: number;
   monthlyCommissionGoal: number;
   workSchedule: {
     weekdays: number[];

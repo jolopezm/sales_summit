@@ -27,6 +27,16 @@ describe('sale calculations', () => {
   it('rounds the average to a whole money amount', () => expect(averageSale(sales)).toBe(11_745));
   it('returns zero average for no sales', () => expect(averageSale([])).toBe(0));
   it('rounds accumulated commission to a whole money amount', () => expect(accumulatedCommission(sales, 0.007)).toBe(164));
+  it('uses the historical rate stored by each retail sale', () => {
+    const mixedSales: Sale[] = [
+      sales[0],
+      { ...sales[1], retailCommissionRate: 0.012 }
+    ];
+
+    expect(accumulatedCommission(mixedSales, 0.007)).toBe(232);
+    expect(remainingCommission(mixedSales, 0.007, 350)).toBe(118);
+    expect(goalProgress(mixedSales, 0.007, 350)).toBeCloseTo(66.286);
+  });
   it('calculates commission goal progress and caps it at 100', () => {
     expect(goalProgress(sales, 0.007, 350)).toBeCloseTo(46.857);
     expect(goalProgress(sales, 0.007, 100)).toBe(100);

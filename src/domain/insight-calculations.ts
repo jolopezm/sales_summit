@@ -222,9 +222,11 @@ export function monthlyCommissionProjection(
 ): number {
   const { elapsed, total } = workingMinutesInMonth(schedule, now);
   if (elapsed === 0) return 0;
-  const projectedGrossSales =
-    (totalSales(currentMonthSales(sales, now)) / elapsed) * total;
-  return Math.round(projectedGrossSales * commissionRate);
+  const earnedCommission = accumulatedCommission(
+    currentMonthSales(sales, now),
+    commissionRate,
+  );
+  return Math.round((earnedCommission / elapsed) * total);
 }
 
 export function averageCommissionPerWorkedDay(
@@ -236,9 +238,11 @@ export function averageCommissionPerWorkedDay(
   const { elapsed } = workingMinutesInMonth(schedule, now);
   const duration = scheduleMinutes(schedule).duration;
   if (elapsed === 0) return 0;
-  const grossSalesPerDay =
-    totalSales(currentMonthSales(sales, now)) / (elapsed / duration);
-  return Math.round(grossSalesPerDay * commissionRate);
+  const earnedCommission = accumulatedCommission(
+    currentMonthSales(sales, now),
+    commissionRate,
+  );
+  return Math.round(earnedCommission / (elapsed / duration));
 }
 
 export function commissionNeededPerRemainingWorkday(

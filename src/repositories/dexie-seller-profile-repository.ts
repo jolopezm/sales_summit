@@ -15,6 +15,9 @@ export class DexieSellerProfileRepository implements SellerProfileRepository {
     return {
       name: record.name,
       commissionRate: record.commissionRate,
+      ...(record.commissionRateRetail === undefined
+        ? {}
+        : { commissionRateRetail: record.commissionRateRetail }),
       monthlyCommissionGoal: record.monthlyCommissionGoal,
       workSchedule: {
         weekdays: [...record.workSchedule.weekdays],
@@ -25,11 +28,17 @@ export class DexieSellerProfileRepository implements SellerProfileRepository {
     };
   }
 
-  async save(profile: SellerProfile): Promise<void> {
+  async save(
+    profile: SellerProfile,
+    applyRetailRateToExistingSales = false,
+  ): Promise<void> {
     const record: SellerProfileRecord = {
       key: SELLER_PROFILE_KEY,
       name: profile.name,
       commissionRate: profile.commissionRate,
+      ...(profile.commissionRateRetail === undefined
+        ? {}
+        : { commissionRateRetail: profile.commissionRateRetail }),
       monthlyCommissionGoal: profile.monthlyCommissionGoal,
       workSchedule: {
         weekdays: [...profile.workSchedule.weekdays],
@@ -39,6 +48,25 @@ export class DexieSellerProfileRepository implements SellerProfileRepository {
       }
     };
 
-    await this.database.sellerProfiles.put(record);
+    await this.database.transaction(
+      'rw',
+      this.database.sellerProfiles,
+      this.database.sales,
+      async () => {
+        await this.database.sellerProfiles.put(record);
+
+        if (
+          applyRetailRateToExistingSales &&
+          profile.commissionRateRetail !== undefined
+        ) {
+          const retailRate = profile.commissionRateRetail;
+          await this.database.sales
+            .filter((sale) => sale.retailCommissionRate !== undefined)
+            .modify((sale) => {
+              sale.retailCommissionRate = retailRate;
+            });
+        }
+      },
+    );
   }
 }

@@ -11,6 +11,7 @@ export interface WorkSchedule {
 export interface SellerProfile {
   name: string;
   commissionRate: number;
+  commissionRateRetail?: number;
   monthlyCommissionGoal: number;
   workSchedule: WorkSchedule;
 }
@@ -18,6 +19,7 @@ export interface SellerProfile {
 export interface Sale {
   id: string;
   amount: number;
+  retailCommissionRate?: number;
   soldAt: string;
   createdAt: string;
 }

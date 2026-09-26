@@ -1,23 +1,28 @@
 <script lang="ts">
   interface Props {
     open: boolean;
+    retailCommissionRate?: number;
     onClose: () => void;
-    onSave: (amount: number) => Promise<void>;
+    onSave: (amount: number, retailCommissionRate?: number) => Promise<void>;
   }
 
-  let { open, onClose, onSave }: Props = $props();
+  let { open, retailCommissionRate, onClose, onSave }: Props = $props();
   let dialog = $state<HTMLDialogElement>();
   let amountInput = $state<HTMLInputElement>();
   let amountText = $state("");
   let error = $state("");
   let saving = $state(false);
+  let isRetail = $state(false);
 
   $effect(() => {
     if (open && dialog && !dialog.open) {
       dialog.showModal();
       requestAnimationFrame(() => amountInput?.focus());
     }
-    if (!open && dialog?.open) dialog.close();
+    if (!open) {
+      isRetail = false;
+      if (dialog?.open) dialog.close();
+    }
   });
 
   async function submit(event: SubmitEvent) {
@@ -33,8 +38,12 @@
 
     saving = true;
     try {
-      await onSave(amount);
+      await onSave(
+        amount,
+        isRetail ? retailCommissionRate : undefined,
+      );
       amountText = "";
+      isRetail = false;
       onClose();
     } catch {
       error = "No pudimos guardar la venta. Intenta nuevamente.";
@@ -73,6 +82,12 @@
         required
       />
     </div>
+    {#if retailCommissionRate !== undefined}
+      <label class="checkbox-field">
+        <input type="checkbox" bind:checked={isRetail} />
+        <span>¿Comisión retail?</span>
+      </label>
+    {/if}
     {#if error}<p class="form-error" role="alert">{error}</p>{/if}
     <div class="dialog-actions">
       <button type="button" onclick={onClose}>Cancelar</button>

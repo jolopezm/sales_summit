@@ -3,18 +3,25 @@
 
   interface Props {
     sale: Sale | null;
+    retailCommissionRate?: number;
     onClose: () => void;
-    onSave: (sale: Sale, amount: number) => Promise<void>;
+    onSave: (
+      sale: Sale,
+      amount: number,
+      retailCommissionRate?: number,
+    ) => Promise<void>;
     onDelete: (id: string) => Promise<void>;
   }
 
-  let { sale, onClose, onSave, onDelete }: Props = $props();
+  let { sale, retailCommissionRate, onClose, onSave, onDelete }: Props =
+    $props();
   let dialog = $state<HTMLDialogElement>();
   let amountInput = $state<HTMLInputElement>();
   let amountText = $state("");
   let error = $state("");
   let saving = $state(false);
   let confirmingDelete = $state(false);
+  let isRetail = $state(false);
   let loadedSaleId = $state<string | null>(null);
 
   const amountFormatter = new Intl.NumberFormat("es-CL");
@@ -23,6 +30,7 @@
     if (sale && sale.id !== loadedSaleId) {
       loadedSaleId = sale.id;
       amountText = amountFormatter.format(sale.amount);
+      isRetail = sale.retailCommissionRate !== undefined;
       error = "";
       confirmingDelete = false;
     }
@@ -61,7 +69,10 @@
 
     saving = true;
     try {
-      await onSave(sale, amount);
+      const appliedRetailRate = isRetail
+        ? (sale.retailCommissionRate ?? retailCommissionRate)
+        : undefined;
+      await onSave(sale, amount, appliedRetailRate);
       onClose();
     } catch {
       error = "No pudimos guardar la venta. Intenta nuevamente.";
@@ -134,6 +145,12 @@
           required
         />
       </div>
+      {#if retailCommissionRate !== undefined}
+        <label class="checkbox-field">
+          <input type="checkbox" bind:checked={isRetail} />
+          <span>¿Comisión retail?</span>
+        </label>
+      {/if}
       {#if error}<p class="form-error" role="alert">{error}</p>{/if}
       <div class="dialog-actions">
         <button type="button" onclick={close}>Cancelar</button>
