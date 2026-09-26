@@ -18,7 +18,13 @@ export function accumulatedCommission(
   sales: readonly Sale[],
   commissionRate: number,
 ): number {
-  return Math.round(totalSales(sales) * commissionRate);
+  return Math.round(
+    sales.reduce(
+      (total, sale) =>
+        total + sale.amount * (sale.retailCommissionRate ?? commissionRate),
+      0,
+    ),
+  );
 }
 
 export function remainingCommission(

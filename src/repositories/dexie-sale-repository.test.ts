@@ -39,6 +39,20 @@ describe('DexieSaleRepository', () => {
     await expect(repository.list()).resolves.toMatchObject([{ id: 'sale', amount: 15_000 }]);
   });
 
+  it('persists the retail rate applied to a sale', async () => {
+    await repository.add({
+      id: 'retail-sale',
+      amount: 10_000,
+      retailCommissionRate: 0.012,
+      soldAt: '2026-09-01T10:00:00.000Z',
+      createdAt: '2026-09-01T10:00:00.000Z'
+    });
+
+    await expect(repository.list()).resolves.toMatchObject([
+      { id: 'retail-sale', retailCommissionRate: 0.012 }
+    ]);
+  });
+
   it('deletes an existing sale', async () => {
     await repository.add({ id: 'sale', amount: 10_000, soldAt: '2026-09-01T10:00:00.000Z', createdAt: '2026-09-01T10:00:00.000Z' });
 

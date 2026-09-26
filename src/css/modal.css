@@ -22,6 +22,23 @@ dialog label {
   font-size: 0.85rem;
   font-weight: 750;
 }
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 2.75rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--green-soft);
+  color: var(--text);
+}
+.checkbox-field input {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  accent-color: var(--green-dark);
+}
 .money-input {
   display: flex;
   align-items: center;
@@ -61,6 +78,20 @@ dialog label {
 .delete-confirmation {
   display: grid;
   gap: 1rem;
+}
+.rate-change-confirmation {
+  display: grid;
+  gap: 0.8rem;
+}
+.rate-change-confirmation p {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.rate-change-confirmation button {
+  min-height: 3rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
 }
 .delete-confirmation button {
   min-height: 3rem;

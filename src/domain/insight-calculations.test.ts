@@ -123,6 +123,17 @@ describe('work schedule insights', () => {
     expect(averageCommissionPerWorkedDay(completedSales, 0.1, schedule, now)).toBe(176);
   });
 
+  it('projects and averages mixed commissions from their applied rates', () => {
+    const mixedSales = completedSales.map((currentSale) =>
+      currentSale.id === '1'
+        ? { ...currentSale, retailCommissionRate: 0.2 }
+        : currentSale
+    );
+
+    expect(monthlyCommissionProjection(mixedSales, 0.1, schedule, now)).toBe(4_141);
+    expect(averageCommissionPerWorkedDay(mixedSales, 0.1, schedule, now)).toBe(188);
+  });
+
   it('calculates commission needed per remaining equivalent workday', () => {
     expect(commissionNeededPerRemainingWorkday(completedSales, 0.1, 4_400, schedule, now)).toBe(215);
   });

@@ -11,7 +11,7 @@
   import { DexieSaleRepository } from "./repositories/dexie-sale-repository";
   import { DexieSellerProfileRepository } from "./repositories/dexie-seller-profile-repository";
   import { createSale } from "./services/create-sale";
-  import { updateSaleAmount } from "./services/update-sale";
+  import { updateSale as updateSaleDetails } from "./services/update-sale";
 
   const emptyProfile: SellerProfile = {
     name: "",
@@ -69,9 +69,9 @@
     activePage = page;
   }
 
-  async function addSale(amount: number) {
+  async function addSale(amount: number, retailCommissionRate?: number) {
     try {
-      const sale = createSale(amount);
+      const sale = createSale(amount, undefined, retailCommissionRate);
       await saleRepository.add(sale);
       sales = [sale, ...sales];
       showToast("Venta guardada con exito.", "success");
@@ -81,9 +81,17 @@
     }
   }
 
-  async function updateSale(sale: Sale, amount: number) {
+  async function updateSale(
+    sale: Sale,
+    amount: number,
+    retailCommissionRate?: number,
+  ) {
     try {
-      const updatedSale = updateSaleAmount(sale, amount);
+      const updatedSale = updateSaleDetails(
+        sale,
+        amount,
+        retailCommissionRate,
+      );
       await saleRepository.update(updatedSale);
       sales = sales.map((storedSale) =>
         storedSale.id === updatedSale.id ? updatedSale : storedSale,
@@ -101,10 +109,37 @@
     sales = sales.filter((sale) => sale.id !== id);
   }
 
-  async function saveProfile(updatedProfile: SellerProfile) {
+  async function saveProfile(
+    updatedProfile: SellerProfile,
+    applyRetailRateToExistingSales = false,
+  ) {
     try {
-      await profileRepository.save(updatedProfile);
+      const hasRetailSales = sales.some(
+        (sale) => sale.retailCommissionRate !== undefined,
+      );
+      if (
+        updatedProfile.commissionRateRetail === undefined &&
+        hasRetailSales
+      ) {
+        throw new Error("Retail commission rate is still in use");
+      }
+
+      await profileRepository.save(
+        updatedProfile,
+        applyRetailRateToExistingSales,
+      );
       profile = updatedProfile;
+      if (
+        applyRetailRateToExistingSales &&
+        updatedProfile.commissionRateRetail !== undefined
+      ) {
+        const retailRate = updatedProfile.commissionRateRetail;
+        sales = sales.map((sale) =>
+          sale.retailCommissionRate === undefined
+            ? sale
+            : { ...sale, retailCommissionRate: retailRate },
+        );
+      }
 
       showToast("Configuraciones guardadas.", "success");
     } catch (error) {
@@ -195,7 +230,13 @@
     {:else if activePage === "insights"}
       <InsightsPage {profile} {sales} {currency} {now} />
     {:else if activePage === "profile"}
-      <ProfilePage {profile} onSave={saveProfile} />
+      <ProfilePage
+        {profile}
+        onSave={saveProfile}
+        hasRetailSales={sales.some(
+          (sale) => sale.retailCommissionRate !== undefined,
+        )}
+      />
     {/if}
 
     <BottomNavigation
@@ -205,6 +246,7 @@
     />
     <SaleEntryDialog
       open={saleDialogOpen}
+      retailCommissionRate={profile.commissionRateRetail}
       onClose={() => (saleDialogOpen = false)}
       onSave={addSale}
     />

@@ -41,6 +41,14 @@ describe('DexieSellerProfileRepository', () => {
     await expect(repository.get()).resolves.toEqual(profile);
   });
 
+  it('saves and loads an optional retail commission rate', async () => {
+    const retailProfile = { ...profile, commissionRateRetail: 0.012 };
+
+    await repository.save(retailProfile);
+
+    await expect(repository.get()).resolves.toEqual(retailProfile);
+  });
+
   it('saves reactive weekday arrays including Sunday and Saturday', async () => {
     await repository.save({
       ...profile,
@@ -95,6 +103,54 @@ describe('DexieSellerProfileRepository', () => {
       monthlyCommissionGoal: 320_000
     });
     await expect(database.sellerProfiles.count()).resolves.toBe(1);
+  });
+
+  it('keeps historical retail rates when a change applies only to future sales', async () => {
+    const saleRepository = new DexieSaleRepository(database);
+    await saleRepository.add({
+      id: 'retail-sale',
+      amount: 10_000,
+      retailCommissionRate: 0.01,
+      soldAt: '2026-09-01T10:00:00.000Z',
+      createdAt: '2026-09-01T10:00:00.000Z'
+    });
+
+    await repository.save({ ...profile, commissionRateRetail: 0.015 });
+
+    await expect(saleRepository.list()).resolves.toMatchObject([
+      { id: 'retail-sale', retailCommissionRate: 0.01 }
+    ]);
+  });
+
+  it('applies a changed retail rate to every existing retail sale', async () => {
+    const saleRepository = new DexieSaleRepository(database);
+    const soldAt = '2026-09-01T10:00:00.000Z';
+    await saleRepository.add({
+      id: 'retail-sale',
+      amount: 10_000,
+      retailCommissionRate: 0.01,
+      soldAt,
+      createdAt: soldAt
+    });
+    await saleRepository.add({
+      id: 'regular-sale',
+      amount: 20_000,
+      soldAt,
+      createdAt: soldAt
+    });
+
+    await repository.save(
+      { ...profile, commissionRateRetail: 0.015 },
+      true
+    );
+
+    const storedSales = await saleRepository.list();
+    expect(storedSales.find(({ id }) => id === 'retail-sale')).toMatchObject({
+      retailCommissionRate: 0.015
+    });
+    expect(storedSales.find(({ id }) => id === 'regular-sale')).not.toHaveProperty(
+      'retailCommissionRate'
+    );
   });
 
   it('upgrades a v1 database without losing sales', async () => {

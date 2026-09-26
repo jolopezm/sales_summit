@@ -21,4 +21,18 @@ describe('createSale', () => {
   it('rejects invalid sale dates', () => {
     expect(() => createSale(1_000, 'invalid')).toThrow(RangeError);
   });
+
+  it('stores the retail commission rate applied to the sale', () => {
+    vi.stubGlobal('crypto', { randomUUID: () => 'retail-sale' });
+
+    expect(createSale(10_000, '2026-09-11T10:00:00Z', 0.012)).toMatchObject({
+      id: 'retail-sale',
+      retailCommissionRate: 0.012
+    });
+    vi.unstubAllGlobals();
+  });
+
+  it.each([0, -0.1, 1.1, Number.NaN])('rejects invalid retail rates: %s', (rate) => {
+    expect(() => createSale(1_000, undefined, rate)).toThrow(RangeError);
+  });
 });

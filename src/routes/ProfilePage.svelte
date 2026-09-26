@@ -5,8 +5,12 @@
 
   interface Props {
     profile: SellerProfile;
-    onSave: (profile: SellerProfile) => Promise<void>;
+    onSave: (
+      profile: SellerProfile,
+      applyRetailRateToExistingSales?: boolean,
+    ) => Promise<void>;
     onboarding?: boolean;
+    hasRetailSales?: boolean;
   }
 
   const days = [
@@ -19,16 +23,25 @@
     { value: 6, short: "S", name: "Sábado" },
   ];
 
-  let { profile, onSave, onboarding = false }: Props = $props();
+  let {
+    profile,
+    onSave,
+    onboarding = false,
+    hasRetailSales = false,
+  }: Props = $props();
   let name = $state("");
   let monthlyCommissionGoalText = $state("");
   let commissionPercent = $state(0);
+  let commissionPercentRetail = $state<number | undefined>(undefined);
   let weekdays = $state<number[]>([]);
   let startTime = $state("");
   let endTime = $state("");
   let breakHour = $state("");
   let saving = $state(false);
   let error = $state("");
+  let rateChangeDialog = $state<HTMLDialogElement>();
+  let pendingProfile = $state<SellerProfile | null>(null);
+  let confirmationError = $state("");
   let initialized = false;
   const amountFormatter = new Intl.NumberFormat("es-CL");
 
@@ -39,6 +52,10 @@
       ? amountFormatter.format(profile.monthlyCommissionGoal)
       : "";
     commissionPercent = profile.commissionRate * 100;
+    commissionPercentRetail =
+      profile.commissionRateRetail === undefined
+        ? undefined
+        : profile.commissionRateRetail * 100;
     weekdays = [...profile.workSchedule.weekdays];
     startTime = profile.workSchedule.startTime;
     endTime = profile.workSchedule.endTime;
@@ -61,9 +78,28 @@
       : "";
   }
 
+  async function save(
+    updatedProfile: SellerProfile,
+    applyRetailRateToExistingSales = false,
+  ) {
+    saving = true;
+    try {
+      await onSave(updatedProfile, applyRetailRateToExistingSales);
+      pendingProfile = null;
+      rateChangeDialog?.close();
+    } catch {
+      const message = "No pudimos guardar los cambios.";
+      error = message;
+      confirmationError = message;
+    } finally {
+      saving = false;
+    }
+  }
+
   async function submit(event: SubmitEvent) {
     event.preventDefault();
     error = "";
+    confirmationError = "";
     const monthlyCommissionGoal = Number(
       monthlyCommissionGoalText.replace(/\D/g, ""),
     );
@@ -76,25 +112,50 @@
       error = "La meta debe ser un monto entero mayor que cero.";
     } else if (!(commissionPercent > 0 && commissionPercent <= 100)) {
       error = "La comisión debe estar entre 0 y 100%.";
+    } else if (
+      commissionPercentRetail !== undefined &&
+      !(commissionPercentRetail > 0 && commissionPercentRetail <= 100)
+    ) {
+      error = "La comisión retail debe estar entre 0 y 100%.";
+    } else if (commissionPercentRetail === undefined && hasRetailSales) {
+      error =
+        "No puedes eliminar la comisión retail mientras existan ventas retail.";
     } else if (!isValidWorkSchedule(schedule)) {
       error =
         "Elige al menos un día y un horario de salida posterior a la entrada.";
     }
     if (error) return;
 
-    saving = true;
-    try {
-      await onSave({
-        name: name.trim(),
-        monthlyCommissionGoal,
-        commissionRate: commissionPercent / 100,
-        workSchedule: schedule,
-      });
-    } catch {
-      error = "No pudimos guardar los cambios.";
-    } finally {
-      saving = false;
+    const updatedProfile: SellerProfile = {
+      name: name.trim(),
+      monthlyCommissionGoal,
+      commissionRate: commissionPercent / 100,
+      ...(commissionPercentRetail === undefined
+        ? {}
+        : { commissionRateRetail: commissionPercentRetail / 100 }),
+      workSchedule: schedule,
+    };
+    const retailRateChanged =
+      profile.commissionRateRetail !== undefined &&
+      updatedProfile.commissionRateRetail !== undefined &&
+      Math.abs(
+        profile.commissionRateRetail - updatedProfile.commissionRateRetail,
+      ) > 1e-12;
+
+    if (retailRateChanged && hasRetailSales) {
+      pendingProfile = updatedProfile;
+      requestAnimationFrame(() => rateChangeDialog?.showModal());
+      return;
     }
+
+    await save(updatedProfile);
+  }
+
+  function cancelRateChange() {
+    if (saving) return;
+    pendingProfile = null;
+    confirmationError = "";
+    rateChangeDialog?.close();
   }
 </script>
 
@@ -149,6 +210,24 @@
             step="0.01"
             bind:value={commissionPercent}
             required
+          />
+          <span>%</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="commission-rate-retail"
+          >Porcentaje de comisión retail (opcional)</label
+        >
+        <div class="suffix-input">
+          <input
+            id="commission-rate-retail"
+            name="commissionRateRetail"
+            type="number"
+            min="0.01"
+            max="100"
+            step="0.01"
+            bind:value={commissionPercentRetail}
           />
           <span>%</span>
         </div>
@@ -214,3 +293,40 @@
     </button>
   </form>
 </section>
+
+<dialog
+  bind:this={rateChangeDialog}
+  aria-labelledby="retail-rate-change-title"
+  onclose={() => {
+    if (!saving) pendingProfile = null;
+  }}
+>
+  <section class="rate-change-confirmation">
+    <h2 id="retail-rate-change-title">¿Dónde aplicamos la nueva tasa?</h2>
+    <p>
+      Puedes recalcular todas tus ventas retail o conservar su tasa actual y
+      usar la nueva sólo en ventas futuras.
+    </p>
+    {#if confirmationError}
+      <p class="form-error" role="alert">{confirmationError}</p>
+    {/if}
+    <button
+      class="btn-primary"
+      type="button"
+      disabled={saving}
+      onclick={() => pendingProfile && save(pendingProfile, true)}
+    >
+      Aplicar a todas
+    </button>
+    <button
+      type="button"
+      disabled={saving}
+      onclick={() => pendingProfile && save(pendingProfile)}
+    >
+      Sólo ventas futuras
+    </button>
+    <button type="button" disabled={saving} onclick={cancelRateChange}
+      >Cancelar</button
+    >
+  </section>
+</dialog>

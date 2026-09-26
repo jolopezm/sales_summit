@@ -14,7 +14,11 @@
     profile: SellerProfile;
     currency: Intl.NumberFormat;
     now: Date;
-    onUpdate: (sale: Sale, amount: number) => Promise<void>;
+    onUpdate: (
+      sale: Sale,
+      amount: number,
+      retailCommissionRate?: number,
+    ) => Promise<void>;
     onDelete: (id: string) => Promise<void>;
   }
 
@@ -40,6 +44,7 @@
       .map((group) => ({
         ...group,
         total: totalSales(group.sales),
+        largestAmount: Math.max(...group.sales.map((sale) => sale.amount)),
         commission: accumulatedCommission(
           group.sales,
           profile.commissionRate,
@@ -101,7 +106,14 @@
                   aria-label={`Editar venta de ${currency.format(sale.amount)}`}
                 >
                   <span class="sale-value">
-                    <strong>{currency.format(sale.amount)}</strong>
+                    <span class="sale-amount">
+                      <strong class:largest-sale={sale.amount === group.largestAmount}
+                        >{currency.format(sale.amount)}</strong
+                      >
+                      {#if sale.retailCommissionRate !== undefined}
+                        <span class="retail-badge">Retail</span>
+                      {/if}
+                    </span>
                     <small
                       >| {currency.format(
                         accumulatedCommission([sale], profile.commissionRate),
@@ -122,6 +134,7 @@
 
   <SaleEditDialog
     sale={selectedSale}
+    retailCommissionRate={profile.commissionRateRetail}
     onClose={() => (selectedSale = null)}
     onSave={onUpdate}
     {onDelete}
