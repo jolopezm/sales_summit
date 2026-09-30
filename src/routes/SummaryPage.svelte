@@ -76,6 +76,10 @@
       ? "<0,01%"
       : `${progressFormatter.format(progress)}%`,
   );
+
+  function handleClickProgressRing() {
+    window.location.hash = "yearly-progress";
+  }
 </script>
 
 <header class="page-header">
@@ -97,6 +101,7 @@
       class="progress-ring"
       style={`--progress: ${progress}`}
       aria-hidden="true"
+      onclick={handleClickProgressRing}
     >
       <span>{progressLabel}</span>
     </div>
