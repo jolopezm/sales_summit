@@ -8,6 +8,8 @@
   import SalesPage from "./routes/SalesPage.svelte";
   import SummaryPage from "./routes/SummaryPage.svelte";
   import InsightsPage from "./routes/InsightsPage.svelte";
+  import NotFoundPage from "./routes/NotFoundPage.svelte";
+  import YearlyProgressPage from "./routes/YearlyProgressPage.svelte";
   import { DexieSaleRepository } from "./repositories/dexie-sale-repository";
   import { DexieSellerProfileRepository } from "./repositories/dexie-seller-profile-repository";
   import { createSale } from "./services/create-sale";
@@ -41,7 +43,13 @@
     maximumFractionDigits: 0,
   });
 
-  type Page = "summary" | "sales" | "profile" | "insights";
+  type Page =
+    | "summary"
+    | "sales"
+    | "profile"
+    | "insights"
+    | "not-found"
+    | "yearly-progress";
 
   let activePage: Page = $state("summary");
 
@@ -62,6 +70,8 @@
     if (hash === "#sales") return "sales";
     if (hash === "#profile") return "profile";
     if (hash === "#insights") return "insights";
+    if (hash === "#not-found") return "not-found";
+    if (hash === "#yearly-progress") return "yearly-progress";
     return "summary";
   }
 
@@ -87,11 +97,7 @@
     retailCommissionRate?: number,
   ) {
     try {
-      const updatedSale = updateSaleDetails(
-        sale,
-        amount,
-        retailCommissionRate,
-      );
+      const updatedSale = updateSaleDetails(sale, amount, retailCommissionRate);
       await saleRepository.update(updatedSale);
       sales = sales.map((storedSale) =>
         storedSale.id === updatedSale.id ? updatedSale : storedSale,
@@ -117,10 +123,7 @@
       const hasRetailSales = sales.some(
         (sale) => sale.retailCommissionRate !== undefined,
       );
-      if (
-        updatedProfile.commissionRateRetail === undefined &&
-        hasRetailSales
-      ) {
+      if (updatedProfile.commissionRateRetail === undefined && hasRetailSales) {
         throw new Error("Retail commission rate is still in use");
       }
 
@@ -237,6 +240,8 @@
           (sale) => sale.retailCommissionRate !== undefined,
         )}
       />
+    {:else if activePage === "yearly-progress"}
+      <YearlyProgressPage {sales} {profile} {currency} {now} />
     {/if}
 
     <BottomNavigation

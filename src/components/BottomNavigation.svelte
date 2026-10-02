@@ -9,9 +9,10 @@
   } from "@fortawesome/free-solid-svg-icons";
 
   type Page = "summary" | "sales" | "profile" | "insights";
+  type ActivePage = Page | "yearly-progress" | "not-found";
 
   interface Props {
-    activePage: Page;
+    activePage: ActivePage;
     onSelect: (page: Page) => void;
     onAddSale: () => void;
   }

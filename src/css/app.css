@@ -126,6 +126,31 @@ article {
   font-weight: 850;
 }
 
+.progress-ring.sm-ring {
+  width: min(100%, 4.5rem);
+  height: auto;
+  aspect-ratio: 1;
+  margin-inline: auto;
+  color: var(--navy);
+  text-decoration: none;
+}
+
+.progress-ring.sm-ring span {
+  font-size: small;
+}
+
+.yearly-grid article {
+  display: grid;
+  min-width: 0;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.yearly-grid article > small {
+  text-transform: capitalize;
+}
+
 .summary-grid,
 .metrics-grid {
   display: grid;
@@ -585,4 +610,10 @@ fieldset {
   border-radius: 50%;
   border: none;
   font-size: 22px;
+}
+
+.yearly-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
 }

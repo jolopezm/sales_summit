@@ -101,3 +101,75 @@ dialog label {
   border: 1px solid var(--border);
   background: white;
 }
+
+.month-trigger {
+  padding: 0;
+  border: 0;
+}
+
+.month-detail {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.month-detail-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.month-detail-header h2 {
+  text-transform: capitalize;
+}
+
+.dialog-close {
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: white;
+  color: var(--text);
+  font-size: 1.5rem;
+}
+
+.month-detail-goal {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+.month-detail-goal strong {
+  display: block;
+  margin-block: 0.25rem;
+  font-size: 1.6rem;
+}
+
+.month-detail-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.month-detail-metrics div {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-primary);
+}
+
+.month-detail-metrics dt {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.month-detail-metrics dd {
+  margin: 0.35rem 0 0;
+  overflow-wrap: anywhere;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
