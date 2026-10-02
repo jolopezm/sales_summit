@@ -241,7 +241,7 @@
         )}
       />
     {:else if activePage === "yearly-progress"}
-      <YearlyProgressPage {sales} {profile} {now}></YearlyProgressPage>
+      <YearlyProgressPage {sales} {profile} {currency} {now} />
     {/if}
 
     <BottomNavigation

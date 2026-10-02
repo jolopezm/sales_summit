@@ -1,15 +1,34 @@
 <script lang="ts">
+  import MonthDetailsDialog from "../components/MonthDetailsDialog.svelte";
   import type { Sale, SellerProfile } from "../domain/models";
-  import { goalProgress } from "../domain/sale-calculations";
+  import {
+    accumulatedCommission,
+    goalProgress,
+    totalSales,
+  } from "../domain/sale-calculations";
   import { filterSalesByRange } from "../domain/insight-calculations";
+  import { faL } from "@fortawesome/free-solid-svg-icons";
 
   interface Props {
     sales: Sale[];
     profile: SellerProfile;
+    currency: Intl.NumberFormat;
     now: Date;
   }
 
-  let { sales, profile, now }: Props = $props();
+  interface MonthSummary {
+    name: string;
+    progress: number;
+    progressLabel: string;
+    commission: number;
+    totalSold: number;
+    saleCount: number;
+    regularSaleCount: number;
+    retailSaleCount: number;
+  }
+
+  let { sales, profile, currency, now }: Props = $props();
+  let selectedMonthIndex = $state<number | null>(null);
 
   const monthNames = [
     "enero",
@@ -30,7 +49,7 @@
     maximumFractionDigits: 1,
   });
   const year = $derived(now.getFullYear());
-  const months = $derived(
+  const months: MonthSummary[] = $derived(
     monthNames.map((name, index) => {
       const monthSales = filterSalesByRange(sales, {
         start: new Date(year, index, 1).toISOString(),
@@ -41,6 +60,9 @@
         profile.commissionRate,
         profile.monthlyCommissionGoal,
       );
+      const retailSaleCount = monthSales.filter(
+        (sale) => sale.retailCommissionRate !== undefined,
+      ).length;
 
       return {
         name,
@@ -49,9 +71,18 @@
           progress > 0 && progress < 0.1
             ? "<0,1%"
             : `${progressFormatter.format(progress)}%`,
+        commission: accumulatedCommission(monthSales, profile.commissionRate),
+        totalSold: totalSales(monthSales),
         saleCount: monthSales.length,
+        regularSaleCount: monthSales.length - retailSaleCount,
+        retailSaleCount,
       };
     }),
+  );
+  const selectedMonth = $derived(
+    selectedMonthIndex === null
+      ? null
+      : (months[selectedMonthIndex] ?? null),
   );
   const hasYearlySales = $derived(months.some((month) => month.saleCount > 0));
 </script>
@@ -63,20 +94,28 @@
   </header>
 
   <div class="yearly-grid" aria-label={`Progreso mensual de ${year}`}>
-    {#each months as month}
+    {#each months as month, index}
       <article>
         <small>{month.name}</small>
-        <a
-          href="#summary"
-          class="progress-ring sm-ring"
+        <button
+          type="button"
+          class="progress-ring sm-ring month-trigger"
           style={`--progress: ${month.progress}`}
-          aria-label={`${month.name}: ${month.progressLabel} de la meta mensual. Volver al resumen`}
+          aria-label={`Ver detalle de ${month.name}: ${month.progressLabel} de la meta mensual`}
+          onclick={() => (selectedMonthIndex = index)}
         >
           <span aria-hidden="true">{month.progressLabel}</span>
-        </a>
+        </button>
       </article>
     {/each}
   </div>
+
+  <MonthDetailsDialog
+    month={selectedMonth}
+    goal={profile.monthlyCommissionGoal}
+    {currency}
+    onClose={() => (selectedMonthIndex = null)}
+  />
 
   {#if !hasYearlySales}
     <article class="empty-state">
